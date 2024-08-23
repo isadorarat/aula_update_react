@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from 'react-router';
 import PessoasRequests from "../../../fetch/PessoasRequests";
 import ListaPessoasUtil from "./ListaPessoasUtil";
 import { FaTrashCan } from "react-icons/fa6";
@@ -8,22 +9,29 @@ import style from './ListaPessoas.module.css';
 function ListaPessoas() {
     const [pessoas, setPessoas] = useState([]);
     const util = new ListaPessoasUtil();
+    const navegacao = useNavigate();
 
     useEffect(() => {
         const fetchPessoas = async () => {
             try {
                 const pessoas = await PessoasRequests.listarPessoas();
-                setPessoas(pessoas);
+                
+                // Ordena os registros por nome em ordem alfabética
+                const pessoasOrdenadas = pessoas.sort((a, b) => 
+                    a.nome.localeCompare(b.nome)
+                );
+
+                setPessoas(pessoasOrdenadas);
             } catch (error) {
-                console.error('Erro ao buscar alunos: ', error);
+                console.error('Erro ao buscar pessoas: ', error);
             }
         };
 
         fetchPessoas();
     }, []);
 
-    const atualizar = () => {
-        // atualizar
+    const atualizar = (pessoa) => {
+        navegacao('/atualizar', { state: { objeto: pessoa }, replace: true });
     }
 
     return (
@@ -44,7 +52,7 @@ function ListaPessoas() {
                             </tr>
                         </thead>
                         <tbody className={style.pTableBody}>
-                            {pessoas.map(pessoa => (
+                            {Array.isArray(pessoas) && pessoas.map(pessoa => (
                                 <tr key={pessoa.id} className={style.pTableBodyTr}>
                                     <td hidden>{pessoa.id}</td>
                                     <td className={style.pTableBodyStrings}>{pessoa.nome}</td>
@@ -55,11 +63,10 @@ function ListaPessoas() {
                                     <td>{util.formatarAltura(pessoa.altura)}</td>
                                     <td>{pessoa.peso}</td>
                                     <td>
-                                        <FaTrashCan  onClick={() => alert('deletar')} className={style.pTableBodyButtons}/>
+                                        <FaTrashCan onClick={() => alert('deletar')} className={style.pTableBodyButtons} />
                                     </td>
                                     <td>
-                                        <AiFillEdit  onClick={() => alert('atualizar')} className={style.pTableBodyButtons}/>
-                                    </td>
+                                        <AiFillEdit onClick={() => atualizar(pessoa)} className={style.pTableBodyButtons} />                                    </td>
                                 </tr>
                             ))}
                         </tbody>
